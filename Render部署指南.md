@@ -65,7 +65,7 @@ git push -u origin main
    - **Region**: 选择离你近的区域（如 Singapore）
    - **Branch**: `main`
    - **Build Command**: `pip install -r requirements.txt`
-   - **Start Command**: `gunicorn --bind 0.0.0.0:$PORT --workers 2 --timeout 120 app:app`
+   - **Start Command**: `gunicorn --bind 0.0.0.0:$PORT --workers 1 --threads 4 --timeout 300 app:app`
    - **Plan**: 选择免费的 `Free` 计划
 
 4. **部署**
@@ -136,7 +136,7 @@ services:
     name: jv-fitting       # 服务名称
     runtime: python        # 运行时：Python
     buildCommand: pip install -r requirements.txt    # 构建命令
-    startCommand: gunicorn --bind 0.0.0.0:$PORT --workers 2 --timeout 120 app:app
+    startCommand: gunicorn --bind 0.0.0.0:$PORT --workers 1 --threads 4 --timeout 300 app:app
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0     # Python版本
