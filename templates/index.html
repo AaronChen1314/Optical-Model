@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Optical Simulation Workbench</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <h1>&#20809;&#23398;&#27169;&#25311;&#19982;&#20998;&#26512;&#24037;&#20316;&#21488;</h1>
+      <p>&#26412;&#22320; TMM / RCWA &#35745;&#31639;&#65292;&#38754;&#21521;&#21472;&#23618;&#20809;&#20239;&#32467;&#26500;&#30340;&#21560;&#25910;&#19982;&#20809;&#30005;&#27969;&#20998;&#26512;&#12290;</p>
+    </div>
+    <div class="top-actions">
+      <button id="saveProjectBtn" class="icon-btn" title="Save project"><i data-lucide="save"></i><span>&#20445;&#23384;</span></button>
+      <button id="exportProjectBtn" class="icon-btn" title="Export project"><i data-lucide="download"></i><span>&#39033;&#30446;</span></button>
+      <label class="icon-btn file-action" title="Import project"><i data-lucide="upload"></i><span>&#23548;&#20837;</span><input id="importProjectInput" type="file" accept=".json"></label>
+    </div>
+  </header>
+
+  <main class="workspace">
+    <aside class="control-panel">
+      <nav class="tabs" aria-label="Control sections">
+        <button class="tab active" data-tab="structure">Structure</button>
+        <button class="tab" data-tab="method">Method</button>
+        <button class="tab" data-tab="temperature">Temperature</button>
+        <button class="tab" data-tab="thickness">Thickness</button>
+        <button class="tab" data-tab="materials">Materials</button>
+      </nav>
+
+      <section class="panel-section tab-panel active" data-panel="structure">
+        <div class="section-title">
+          <h2>&#23618;&#32467;&#26500;</h2>
+          <button id="addLayerBtn" class="square-btn" title="Add layer"><i data-lucide="plus"></i></button>
+        </div>
+        <label>&#27169;&#26495;
+          <select id="templateSelect"></select>
+        </label>
+        <div class="layer-head">
+          <span>&#21517;&#31216;</span><span>&#26448;&#26009;</span><span>&#21402;&#24230; nm</span><span>&#27963;&#24615;</span><span></span>
+        </div>
+        <div id="layerEditor" class="layer-editor"></div>
+      </section>
+
+      <section class="panel-section tab-panel" data-panel="method">
+        <h2>&#35745;&#31639;&#26041;&#27861;</h2>
+        <div class="segmented" role="group">
+          <button class="segment active" data-method="tmm">TMM</button>
+          <button class="segment" data-method="rcwa">RCWA</button>
+          <button class="segment" data-method="compare">&#23545;&#27604;</button>
+        </div>
+        <div class="method-notes">
+          <div><strong>TMM</strong><span>planar multilayer only</span></div>
+          <div><strong>RCWA</strong><span>flat reference or periodic/textured structures</span></div>
+        </div>
+        <div id="compareControls" class="method-card hidden">
+          <label>Compare type
+            <select id="compareType">
+              <option value="tmm_flat_vs_rcwa_flat">TMM flat vs RCWA flat</option>
+              <option value="rcwa_flat_vs_periodic">RCWA flat vs RCWA periodic</option>
+            </select>
+          </label>
+        </div>
+        <div class="field-grid">
+          <label>&#27874;&#38271;&#36215;&#28857; nm
+            <input id="wlStart" type="number" value="300" min="200" step="10">
+          </label>
+          <label>&#27874;&#38271;&#32456;&#28857; nm
+            <input id="wlStop" type="number" value="1060" min="250" step="10">
+          </label>
+          <label>&#27493;&#38271; nm
+            <input id="wlStep" type="number" value="2" min="1" step="1">
+          </label>
+        </div>
+        <div id="rcwaControls" class="method-card">
+          <div class="inline-choice">
+            <span>&#32467;&#26500;</span>
+            <button class="choice active" data-periodic="false">Flat</button>
+            <button class="choice" data-periodic="true">Periodic</button>
+          </div>
+          <div id="periodicFields" class="periodic-fields hidden">
+            <div class="field-grid">
+              <label>&#24418;&#35980;
+                <select id="rcwaShape">
+                  <option>Paraboloid</option>
+                  <option>Pyramid</option>
+                  <option>Cone</option>
+                  <option>Sawtooth</option>
+                </select>
+              </label>
+              <label>Pitch nm
+                <input id="rcwaPitch" type="number" value="500" min="100" step="10">
+              </label>
+              <label>Height nm
+                <input id="rcwaHeight" type="number" value="500" min="0" step="10">
+              </label>
+              <label>Duty cycle
+                <input id="rcwaDuty" type="number" value="0.5" min="0.05" max="0.95" step="0.05">
+              </label>
+              <label>nG
+                <input id="rcwaNG" type="number" value="17" min="5" step="2">
+              </label>
+              <label>Slices
+                <input id="rcwaSlices" type="number" value="12" min="4" step="1">
+              </label>
+            </div>
+          </div>
+          <div class="field-grid">
+            <label>WBG nm
+              <input id="rcwaWbg" type="number" value="410" min="10" step="10">
+            </label>
+            <label>NBG nm
+              <input id="rcwaNbg" type="number" value="800" min="10" step="10">
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel-section tab-panel" data-panel="temperature">
+        <h2>&#28201;&#24230;&#20381;&#36182;</h2>
+        <div class="field-grid">
+          <label>&#28201;&#24230; K
+            <input id="tempList" value="280,300,320">
+          </label>
+          <label>&#21442;&#32771;&#28201;&#24230; K
+            <input id="tempRef" type="number" value="300">
+          </label>
+        </div>
+        <label>Eg(T)
+          <span class="muted">Eg(T)=Eg_ref + alpha*(T-T_ref)</span>
+        </label>
+        <div class="mini-table-head three">
+          <span>Layer</span><span>Eg_ref eV</span><span>alpha eV/K</span>
+        </div>
+        <div id="bandgapEditor" class="mini-editor"></div>
+      </section>
+
+      <section class="panel-section tab-panel" data-panel="thickness">
+        <h2>Thickness Scan</h2>
+        <p class="muted">TMM scan for active absorber layers.</p>
+        <div class="mini-table-head">
+          <span>Layer</span><span>Start</span><span>Stop</span><span>Step</span>
+        </div>
+        <div id="thicknessEditor" class="mini-editor"></div>
+        <button id="thicknessBtn" class="primary-btn wide"><i data-lucide="scan-line"></i><span>Run thickness scan</span></button>
+      </section>
+
+      <section class="panel-section tab-panel" data-panel="materials">
+        <h2>&#26448;&#26009;&#25968;&#25454;</h2>
+        <div id="materialCount" class="muted"></div>
+        <label class="icon-btn wide file-action"><i data-lucide="file-search"></i><span>&#26657;&#39564;&#26448;&#26009; CSV/TXT</span><input id="materialInput" type="file" accept=".csv,.txt"></label>
+        <pre id="materialPreview" class="preview"></pre>
+      </section>
+    </aside>
+
+    <section class="result-panel">
+      <div class="runbar">
+        <div>
+          <h2>&#32467;&#26524;&#39044;&#35272;</h2>
+          <p id="statusText">&#20934;&#22791;&#23601;&#32490;</p>
+        </div>
+        <div class="run-actions">
+          <button id="runBtn" class="primary-btn"><i data-lucide="play"></i><span>&#36816;&#34892;</span></button>
+          <button id="tempBtn" class="icon-btn"><i data-lucide="thermometer"></i><span>&#28201;&#24230;&#25195;&#25551;</span></button>
+          <button id="csvBtn" class="icon-btn"><i data-lucide="table"></i><span>CSV</span></button>
+        </div>
+      </div>
+
+      <div class="progress-line"><div id="progressBar"></div></div>
+      <div id="modelTags" class="model-tags"></div>
+      <div class="metrics" id="metrics"></div>
+
+      <div class="chart-toolbar">
+        <select id="chartMode">
+          <option value="absorption">&#21560;&#25910;&#20809;&#35889;</option>
+          <option value="current">&#20809;&#30005;&#27969;</option>
+          <option value="reflection">&#21453;&#23556;/&#36879;&#23556;</option>
+          <option value="temp_nk">&#28201;&#24230; n/k</option>
+          <option value="temp_jsc">Jsc vs T</option>
+          <option value="temp_absorption">&#28201;&#24230;&#21560;&#25910;</option>
+          <option value="thickness">Thickness scan</option>
+        </select>
+        <select id="nkDisplayMode" title="Temperature n/k display">
+          <option value="n">n only</option>
+          <option value="k">k only</option>
+          <option value="both">n + k</option>
+        </select>
+        <button id="pngBtn" class="square-btn" title="Export PNG"><i data-lucide="image"></i></button>
+        <button id="svgBtn" class="square-btn" title="Export SVG"><i data-lucide="file-code"></i></button>
+        <button id="pdfBtn" class="square-btn" title="Print PDF"><i data-lucide="printer"></i></button>
+      </div>
+      <div id="chart"></div>
+    </section>
+  </main>
+
+  <script src="/static/js/main.js"></script>
+</body>
+</html>
